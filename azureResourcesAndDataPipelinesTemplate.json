@@ -116,89 +116,6 @@
                 "accessTier": "Hot"
             }
         },
-        //{
-        //    "type": "Microsoft.Synapse/workspaces",
-        //    "apiVersion": "2021-06-01",
-        //    "name": "[parameters('synapseWorkspaceName')]",
-        //    "location": "[parameters('location')]",
-        //    "dependsOn": [
-        //        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-        //    ],
-        //    "identity": {
-        //        "type": "SystemAssigned"
-        //    },
-        //    "properties": {
-        //        "defaultDataLakeStorage": {
-        //            "resourceId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
-        //            "createManagedPrivateEndpoint": false,
-        //            "accountUrl": "[variables('storageAccountUrl')]",
-        //            "filesystem": "[variables('synapseFileSystem')]"
-        //        },
-        //        "encryption": {},
-        //        "managedResourceGroupName": "[variables('synapseManagedResourceGroupName')]",
-        //        "sqlAdministratorLogin": "[parameters('sqlAdministratorLogin')]",
-        //        "sqlAdministratorLoginPassword": "[parameters('sqlAdministratorLoginPassword')]",
-        //        "privateEndpointConnections": [],
-        //        "publicNetworkAccess": "Enabled",
-        //        "azureADOnlyAuthentication": false,
-        //        "trustedServiceBypassEnabled": false
-        //    }
-        //},
-        //{
-        //    "type": "Microsoft.Synapse/workspaces/bigDataPools",
-        //    "apiVersion": "2021-06-01",
-        //    "name": "[variables('apacheSparkPoolName')]",
-        //    "location": "[parameters('location')]",
-        //    "dependsOn": [
-        //        "[resourceId('Microsoft.Synapse/workspaces', parameters('synapseWorkspaceName'))]"
-        //    ],
-        //    "properties": {
-        //        "sparkVersion": "3.1",
-        //        "nodeCount": 10,
-        //        "nodeSize": "Medium",
-        //        "nodeSizeFamily": "MemoryOptimized",
-        //        "autoScale": {
-        //            "enabled": true,
-        //            "minNodeCount": 3,
-        //            "maxNodeCount": 6
-        //        },
-        //        "autoPause": {
-        //            "enabled": false,
-        //            "delayInMinutes": 60
-        //        },
-        //        "isComputeIsolationEnabled": false,
-        //        "sessionLevelPackagesEnabled": false,
-        //        "cacheSize": 0,
-        //        "dynamicExecutorAllocation": {
-        //            "enabled": false
-        //        },
-        //        "provisioningState": "Succeeded"
-        //    }
-        //},
-        //{
-        //    "type": "Microsoft.Synapse/workspaces/firewallRules",
-        //    "apiVersion": "2021-06-01",
-        //    "name": "[concat(parameters('synapseWorkspaceName'), '/allowAll')]",
-        //    "dependsOn": [
-        //        "[resourceId('Microsoft.Synapse/workspaces', parameters('synapseWorkspaceName'))]"
-        //    ],
-        //    "properties": {
-        //        "startIpAddress": "0.0.0.0",
-        //        "endIpAddress": "255.255.255.255"
-        //    }
-        //},
-        //{
-        //    "type": "Microsoft.Synapse/workspaces/firewallRules",
-        //    "apiVersion": "2021-06-01",
-        //    "name": "[concat(parameters('synapseWorkspaceName'), '/AllowAllWindowsAzureIps')]",
-        //    "dependsOn": [
-        //        "[resourceId('Microsoft.Synapse/workspaces', parameters('synapseWorkspaceName'))]"
-        //    ],
-        //    "properties": {
-        //        "startIpAddress": "0.0.0.0",
-        //        "endIpAddress": "0.0.0.0"
-        //    }
-        //},
         {
             "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
             "apiVersion": "2021-09-01",
@@ -216,8 +133,7 @@
             "name": "CreateDataPipelines",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[parameters('storageAccountName')]"//,
-                //"[parameters('synapseWorkspaceName')]"
+                "[parameters('storageAccountName')]"
             ],
             "kind": "AzureCLI",
             "properties": {
