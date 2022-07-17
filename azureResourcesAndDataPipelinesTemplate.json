@@ -133,8 +133,7 @@
             "name": "CreateDataPipelines",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[parameters('storageAccountName')]"//,
-                //"[parameters('synapseWorkspaceName')]"
+                "[parameters('storageAccountName')]"
             ],
             "kind": "AzureCLI",
             "properties": {
