@@ -44,6 +44,7 @@
                             "type": "Microsoft.Storage/storageAccounts",
                             "apiVersion": "2017-10-01",
                             "name": "[variables('storageName')]",
+                            "location": "[parameters('rgLocation')]",
                             "kind": "StorageV2",
                             "sku": {
                                 "name": "Standard_LRS"
