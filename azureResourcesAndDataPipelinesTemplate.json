@@ -137,8 +137,7 @@
             ],
             "kind": "AzureCLI",
             "properties": {
-                "scriptContent": "
-                    echo SUBSCRIPTION_ID: ${SUBSCRIPTION_ID};
+                "scriptContent": "echo SUBSCRIPTION_ID: ${SUBSCRIPTION_ID};
                     echo RESOURCE_GROUP_NAME: ${RESOURCE_GROUP_NAME};
                     echo SYNAPSE_WORKSPACE_NAME: ${SYNAPSE_WORKSPACE_NAME};
                     echo ZIP_FILE_URI: ${ZIP_FILE_URI};
@@ -156,8 +155,7 @@
 
                     id=$(az ad sp list --display-name ${SERVICE_PRINCIPAL_NAME} --query [].id -o tsv);
                     echo id: ${id};
-                    az role assignment create --role 'Storage Blob Data Contributor' --assignee-object-id ${id} --assignee-principal-type 'ServicePrincipal' --scope subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Storage/storageAccounts/${STORAGE_ACCOUNT_NAME}
-                    ",
+                    az role assignment create --role 'Storage Blob Data Contributor' --assignee-object-id ${id} --assignee-principal-type 'ServicePrincipal' --scope subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Storage/storageAccounts/${STORAGE_ACCOUNT_NAME}",
                 "azCliVersion": "2.37.0",
                 "retentionInterval": "P1D",
                 "environmentVariables": [
