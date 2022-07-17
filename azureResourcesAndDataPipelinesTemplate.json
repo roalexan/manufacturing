@@ -1,0 +1,292 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "defaultValue": "[resourceGroup().location]",
+            "type": "String",
+            "metadata": {
+                "description": "Specifies the location of the deployment."
+            }
+        },
+        "prefix": {
+            "type": "String",
+            "metadata": {
+                "description": "Short string prepended to some resource names to make them unique."
+            }
+        },
+        "sqlAdministratorLogin": {
+            "defaultValue": "admin1",
+            "type": "String"
+        },
+        "sqlAdministratorLoginPassword": {
+            "type": "SecureString"
+        },
+        "storageAccountName": {
+            "type": "String"
+        },
+        "synapseWorkspaceName": {
+            "type": "String"
+        },
+        "sparkPoolName": {
+            "type": "String",
+            "defaultValue": "[concat(parameters('prefix'), 'synsp')]",
+            "metadata": {
+                "description": "Name of the Apache spark pool to create."
+            }
+        },
+        "artifactsLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The base URI where artifacts required by this template are located including a trailing '/'"
+            }
+        },
+        "artifactsLocationSasToken": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The sasToken required to access _artifactsLocation. Use the defaultValue if the staging location is not secured."
+            },
+            "defaultValue": ""
+        },
+        "servicePrincipalName": {
+            "type": "String",
+            "defaultValue": "[concat(parameters('prefix'), '-mc4m-sp')]",
+            "metadata": {
+                "description": "Name of the service principal that the deployment scripts use when running."
+            }
+        },
+        "tenantId": {
+            "type": "securestring"
+        },
+        "clientId": {
+            "type": "securestring"
+        },
+        "clientSecret": {
+            "type": "securestring"
+        }
+    },
+    "variables": {
+        "apacheSparkPoolName": "[concat(parameters('synapseWorkspaceName'), '/', parameters('sparkPoolName'))]",
+        "storageAccountUrl": "[concat('https://', parameters('storageAccountName'), '.dfs.core.windows.net')]",
+        "synapseFilesystem": "synapsecontainer",
+        "synapseManagedResourceGroupName": "[concat(parameters('prefix'), '-synapse-managed-rg')]",
+        "zipFileForDownload": "[concat(parameters('artifactsLocation'), '?', parameters('artifactsLocationSasToken'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2021-09-01",
+            "name": "[parameters('storageAccountName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "Standard_RAGRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "defaultToOAuthAuthentication": false,
+                "publicNetworkAccess": "Enabled",
+                "allowCrossTenantReplication": false,
+                "isSftpEnabled": false,
+                "minimumTlsVersion": "TLS1_2",
+                "allowBlobPublicAccess": true,
+                "allowSharedKeyAccess": true,
+                "isHnsEnabled": true,
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": [],
+                    "ipRules": [],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                    "requireInfrastructureEncryption": false,
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            }
+        },
+        //{
+        //    "type": "Microsoft.Synapse/workspaces",
+        //    "apiVersion": "2021-06-01",
+        //    "name": "[parameters('synapseWorkspaceName')]",
+        //    "location": "[parameters('location')]",
+        //    "dependsOn": [
+        //        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+        //    ],
+        //    "identity": {
+        //        "type": "SystemAssigned"
+        //    },
+        //    "properties": {
+        //        "defaultDataLakeStorage": {
+        //            "resourceId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+        //            "createManagedPrivateEndpoint": false,
+        //            "accountUrl": "[variables('storageAccountUrl')]",
+        //            "filesystem": "[variables('synapseFileSystem')]"
+        //        },
+        //        "encryption": {},
+        //        "managedResourceGroupName": "[variables('synapseManagedResourceGroupName')]",
+        //        "sqlAdministratorLogin": "[parameters('sqlAdministratorLogin')]",
+        //        "sqlAdministratorLoginPassword": "[parameters('sqlAdministratorLoginPassword')]",
+        //        "privateEndpointConnections": [],
+        //        "publicNetworkAccess": "Enabled",
+        //        "azureADOnlyAuthentication": false,
+        //        "trustedServiceBypassEnabled": false
+        //    }
+        //},
+        //{
+        //    "type": "Microsoft.Synapse/workspaces/bigDataPools",
+        //    "apiVersion": "2021-06-01",
+        //    "name": "[variables('apacheSparkPoolName')]",
+        //    "location": "[parameters('location')]",
+        //    "dependsOn": [
+        //        "[resourceId('Microsoft.Synapse/workspaces', parameters('synapseWorkspaceName'))]"
+        //    ],
+        //    "properties": {
+        //        "sparkVersion": "3.1",
+        //        "nodeCount": 10,
+        //        "nodeSize": "Medium",
+        //        "nodeSizeFamily": "MemoryOptimized",
+        //        "autoScale": {
+        //            "enabled": true,
+        //            "minNodeCount": 3,
+        //            "maxNodeCount": 6
+        //        },
+        //        "autoPause": {
+        //            "enabled": false,
+        //            "delayInMinutes": 60
+        //        },
+        //        "isComputeIsolationEnabled": false,
+        //        "sessionLevelPackagesEnabled": false,
+        //        "cacheSize": 0,
+        //        "dynamicExecutorAllocation": {
+        //            "enabled": false
+        //        },
+        //        "provisioningState": "Succeeded"
+        //    }
+        //},
+        //{
+        //    "type": "Microsoft.Synapse/workspaces/firewallRules",
+        //    "apiVersion": "2021-06-01",
+        //    "name": "[concat(parameters('synapseWorkspaceName'), '/allowAll')]",
+        //    "dependsOn": [
+        //        "[resourceId('Microsoft.Synapse/workspaces', parameters('synapseWorkspaceName'))]"
+        //    ],
+        //    "properties": {
+        //        "startIpAddress": "0.0.0.0",
+        //        "endIpAddress": "255.255.255.255"
+        //    }
+        //},
+        //{
+        //    "type": "Microsoft.Synapse/workspaces/firewallRules",
+        //    "apiVersion": "2021-06-01",
+        //    "name": "[concat(parameters('synapseWorkspaceName'), '/AllowAllWindowsAzureIps')]",
+        //    "dependsOn": [
+        //        "[resourceId('Microsoft.Synapse/workspaces', parameters('synapseWorkspaceName'))]"
+        //    ],
+        //    "properties": {
+        //        "startIpAddress": "0.0.0.0",
+        //        "endIpAddress": "0.0.0.0"
+        //    }
+        //},
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2021-09-01",
+            "name": "[concat(parameters('storageAccountName'), '/default/', variables('synapseFileSystem'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+            ],
+            "properties": {
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deploymentScripts",
+            "apiVersion": "2020-10-01",
+            "name": "CreateDataPipelines",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[parameters('storageAccountName')]"//,
+                //"[parameters('synapseWorkspaceName')]"
+            ],
+            "kind": "AzureCLI",
+            "properties": {
+                "scriptContent": "
+                    echo SUBSCRIPTION_ID: ${SUBSCRIPTION_ID};
+                    echo RESOURCE_GROUP_NAME: ${RESOURCE_GROUP_NAME};
+                    echo SYNAPSE_WORKSPACE_NAME: ${SYNAPSE_WORKSPACE_NAME};
+                    echo ZIP_FILE_URI: ${ZIP_FILE_URI};
+                    echo ZIP_FILE_NAME: ${ZIP_FILE_NAME};
+                    echo SERVICE_PRINCIPAL_NAME: ${SERVICE_PRINCIPAL_NAME};
+                    echo STORAGE_ACCOUNT_NAME: ${STORAGE_ACCOUNT_NAME};
+
+                    echo TENANT_ID: ${TENANT_ID};
+                    echo CLIENT_ID: ${CLIENT_ID};
+                    echo CLIENT_SECRET: ${CLIENT_SECRET};
+                    az login --service-principal --username ${CLIENT_ID} --tenant ${TENANT_ID} --password ${CLIENT_SECRET};
+                    az account show;
+                    az account set -s ${SUBSCRIPTION_ID};
+                    az configure --defaults group=${RESOURCE_GROUP_NAME};
+
+                    id=$(az ad sp list --display-name ${SERVICE_PRINCIPAL_NAME} --query [].id -o tsv);
+                    echo id: ${id};
+                    az role assignment create --role 'Storage Blob Data Contributor' --assignee-object-id ${id} --assignee-principal-type 'ServicePrincipal' --scope subscriptions/${SUBSCRIPTION_ID}/resourceGroups/${RESOURCE_GROUP_NAME}/providers/Microsoft.Storage/storageAccounts/${STORAGE_ACCOUNT_NAME}
+                    ",
+                "azCliVersion": "2.37.0",
+                "retentionInterval": "P1D",
+                "environmentVariables": [
+                    {
+                        "name": "ZIP_FILE_URI",
+                        "value": "[variables('zipFileForDownload')]"
+                    },
+                    {
+                        "name": "ZIP_FILE_NAME",
+                        "value": "mc4m.zip"
+                    },
+                    {
+                        "name": "SUBSCRIPTION_ID",
+                        "value": "[subscription().subscriptionId]"
+                    },
+                    {
+                        "name": "RESOURCE_GROUP_NAME",
+                        "value": "[resourceGroup().name]"
+                    },
+                    {
+                        "name": "SYNAPSE_WORKSPACE_NAME",
+                        "value": "[parameters('synapseWorkspaceName')]"
+                    },
+                    {
+                        "name": "SERVICE_PRINCIPAL_NAME",
+                        "value": "[parameters('servicePrincipalName')]"
+                    },
+                    {
+                        "name": "TENANT_ID",
+                        "value": "[parameters('tenantId')]"
+                    },
+                    {
+                        "name": "CLIENT_ID",
+                        "value": "[parameters('clientId')]"
+                    },
+                    {
+                        "name": "CLIENT_SECRET",
+                        "value": "[parameters('clientSecret')]"
+                    },
+                    {
+                        "name": "STORAGE_ACCOUNT_NAME",
+                        "value": "[parameters('storageAccountName')]"
+                    }
+                ]
+            }
+        }
+    ]
+}
