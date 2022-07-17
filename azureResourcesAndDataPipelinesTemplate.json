@@ -126,63 +126,6 @@
             "properties": {
                 "publicAccess": "None"
             }
-        },
-        {
-            "type": "Microsoft.Resources/deploymentScripts",
-            "apiVersion": "2020-10-01",
-            "name": "CreateDataPipelines",
-            "location": "[parameters('location')]",
-            "dependsOn": [
-                "[parameters('storageAccountName')]"
-            ],
-            "kind": "AzureCLI",
-            "properties": {
-                "scriptContent": "echo SUBSCRIPTION_ID: ${SUBSCRIPTION_ID}",
-                "azCliVersion": "2.37.0",
-                "retentionInterval": "P1D",
-                "environmentVariables": [
-                    {
-                        "name": "ZIP_FILE_URI",
-                        "value": "[variables('zipFileForDownload')]"
-                    },
-                    {
-                        "name": "ZIP_FILE_NAME",
-                        "value": "mc4m.zip"
-                    },
-                    {
-                        "name": "SUBSCRIPTION_ID",
-                        "value": "[subscription().subscriptionId]"
-                    },
-                    {
-                        "name": "RESOURCE_GROUP_NAME",
-                        "value": "[resourceGroup().name]"
-                    },
-                    {
-                        "name": "SYNAPSE_WORKSPACE_NAME",
-                        "value": "[parameters('synapseWorkspaceName')]"
-                    },
-                    {
-                        "name": "SERVICE_PRINCIPAL_NAME",
-                        "value": "[parameters('servicePrincipalName')]"
-                    },
-                    {
-                        "name": "TENANT_ID",
-                        "value": "[parameters('tenantId')]"
-                    },
-                    {
-                        "name": "CLIENT_ID",
-                        "value": "[parameters('clientId')]"
-                    },
-                    {
-                        "name": "CLIENT_SECRET",
-                        "value": "[parameters('clientSecret')]"
-                    },
-                    {
-                        "name": "STORAGE_ACCOUNT_NAME",
-                        "value": "[parameters('storageAccountName')]"
-                    }
-                ]
-            }
         }
     ]
 }
