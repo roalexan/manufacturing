@@ -137,15 +137,13 @@
             ],
             "kind": "AzureCLI",
             "properties": {
-                "scriptContent": "
-                    echo SUBSCRIPTION_ID: ${SUBSCRIPTION_ID};
+                "scriptContent": "echo SUBSCRIPTION_ID: ${SUBSCRIPTION_ID};
                     echo RESOURCE_GROUP_NAME: ${RESOURCE_GROUP_NAME};
                     echo SYNAPSE_WORKSPACE_NAME: ${SYNAPSE_WORKSPACE_NAME};
                     echo ZIP_FILE_URI: ${ZIP_FILE_URI};
                     echo ZIP_FILE_NAME: ${ZIP_FILE_NAME};
                     echo SERVICE_PRINCIPAL_NAME: ${SERVICE_PRINCIPAL_NAME};
-                    echo STORAGE_ACCOUNT_NAME: ${STORAGE_ACCOUNT_NAME};
-                ",
+                    echo STORAGE_ACCOUNT_NAME: ${STORAGE_ACCOUNT_NAME}",
                 "azCliVersion": "2.37.0",
                 "retentionInterval": "P1D",
                 "environmentVariables": [
