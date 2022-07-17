@@ -1,187 +1,57 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.1",
     "parameters": {
-        "location": {
-            "defaultValue": "[resourceGroup().location]",
-            "type": "String",
-            "metadata": {
-                "description": "Specifies the location of the deployment."
-            }
+        "rgName": {
+            "type": "string"
         },
-        "prefix": {
-            "type": "String",
-            "metadata": {
-                "description": "Short string prepended to some resource names to make them unique."
-            }
+        "rgLocation": {
+            "type": "string"
         },
-        "sqlAdministratorLogin": {
-            "defaultValue": "admin1",
-            "type": "String"
-        },
-        "sqlAdministratorLoginPassword": {
-            "type": "SecureString"
-        },
-        "storageAccountName": {
-            "type": "String"
-        },
-        "synapseWorkspaceName": {
-            "type": "String"
-        },
-        "sparkPoolName": {
-            "type": "String",
-            "defaultValue": "[concat(parameters('prefix'), 'synsp')]",
-            "metadata": {
-                "description": "Name of the Apache spark pool to create."
-            }
-        },
-        "artifactsLocation": {
+        "storagePrefix": {
             "type": "string",
-            "metadata": {
-                "description": "The base URI where artifacts required by this template are located including a trailing '/'"
-            }
-        },
-        "artifactsLocationSasToken": {
-            "type": "securestring",
-            "metadata": {
-                "description": "The sasToken required to access _artifactsLocation. Use the defaultValue if the staging location is not secured."
-            },
-            "defaultValue": ""
-        },
-        "servicePrincipalName": {
-            "type": "String",
-            "defaultValue": "[concat(parameters('prefix'), '-mc4m-sp')]",
-            "metadata": {
-                "description": "Name of the service principal that the deployment scripts use when running."
-            }
-        },
-        "tenantId": {
-            "type": "securestring"
-        },
-        "clientId": {
-            "type": "securestring"
-        },
-        "clientSecret": {
-            "type": "securestring"
+            "maxLength": 11
         }
     },
     "variables": {
-        "apacheSparkPoolName": "[concat(parameters('synapseWorkspaceName'), '/', parameters('sparkPoolName'))]",
-        "storageAccountUrl": "[concat('https://', parameters('storageAccountName'), '.dfs.core.windows.net')]",
-        "synapseFilesystem": "synapsecontainer",
-        "synapseManagedResourceGroupName": "[concat(parameters('prefix'), '-synapse-managed-rg')]",
-        "zipFileForDownload": "[concat(parameters('artifactsLocation'), '?', parameters('artifactsLocationSasToken'))]"
+        "storageName": "[concat(parameters('storagePrefix'), uniqueString(subscription().id, parameters('rgName')))]"
     },
     "resources": [
         {
-            "type": "Microsoft.Storage/storageAccounts",
-            "apiVersion": "2021-09-01",
-            "name": "[parameters('storageAccountName')]",
-            "location": "[parameters('location')]",
-            "sku": {
-                "name": "Standard_RAGRS",
-                "tier": "Standard"
-            },
-            "kind": "StorageV2",
+            "type": "Microsoft.Resources/resourceGroups",
+            "apiVersion": "2018-05-01",
+            "location": "[parameters('rgLocation')]",
+            "name": "[parameters('rgName')]",
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "storageDeployment",
+            "resourceGroup": "[parameters('rgName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/resourceGroups/', parameters('rgName'))]"
+            ],
             "properties": {
-                "defaultToOAuthAuthentication": false,
-                "publicNetworkAccess": "Enabled",
-                "allowCrossTenantReplication": false,
-                "isSftpEnabled": false,
-                "minimumTlsVersion": "TLS1_2",
-                "allowBlobPublicAccess": true,
-                "allowSharedKeyAccess": true,
-                "isHnsEnabled": true,
-                "networkAcls": {
-                    "bypass": "AzureServices",
-                    "virtualNetworkRules": [],
-                    "ipRules": [],
-                    "defaultAction": "Allow"
-                },
-                "supportsHttpsTrafficOnly": true,
-                "encryption": {
-                    "requireInfrastructureEncryption": false,
-                    "services": {
-                        "file": {
-                            "keyType": "Account",
-                            "enabled": true
-                        },
-                        "blob": {
-                            "keyType": "Account",
-                            "enabled": true
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Storage/storageAccounts",
+                            "apiVersion": "2017-10-01",
+                            "name": "[variables('storageName')]",
+                            "location": "[parameters('rgLocation')]",
+                            "kind": "StorageV2",
+                            "sku": {
+                                "name": "Standard_LRS"
+                            }
                         }
-                    },
-                    "keySource": "Microsoft.Storage"
-                },
-                "accessTier": "Hot"
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-            "apiVersion": "2021-09-01",
-            "name": "[concat(parameters('storageAccountName'), '/default/', variables('synapseFileSystem'))]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-            ],
-            "properties": {
-                "publicAccess": "None"
-            }
-        },
-        {
-            "type": "Microsoft.Resources/deploymentScripts",
-            "apiVersion": "2020-10-01",
-            "name": "CreateDataPipelines",
-            "location": "[parameters('location')]",
-            "dependsOn": [
-                "[parameters('storageAccountName')]"
-            ],
-            "kind": "AzureCLI",
-            "properties": {
-                "scriptContent": "echo SUBSCRIPTION_ID: ${SUBSCRIPTION_ID};echo RESOURCE_GROUP_NAME: ${RESOURCE_GROUP_NAME};echo SYNAPSE_WORKSPACE_NAME: ${SYNAPSE_WORKSPACE_NAME};echo ZIP_FILE_URI: ${ZIP_FILE_URI};echo ZIP_FILE_NAME: ${ZIP_FILE_NAME};echo SERVICE_PRINCIPAL_NAME: ${SERVICE_PRINCIPAL_NAME};echo STORAGE_ACCOUNT_NAME: ${STORAGE_ACCOUNT_NAME}",
-                "azCliVersion": "2.37.0",
-                "retentionInterval": "P1D",
-                "environmentVariables": [
-                    {
-                        "name": "ZIP_FILE_URI",
-                        "value": "[variables('zipFileForDownload')]"
-                    },
-                    {
-                        "name": "ZIP_FILE_NAME",
-                        "value": "mc4m.zip"
-                    },
-                    {
-                        "name": "SUBSCRIPTION_ID",
-                        "value": "[subscription().subscriptionId]"
-                    },
-                    {
-                        "name": "RESOURCE_GROUP_NAME",
-                        "value": "[resourceGroup().name]"
-                    },
-                    {
-                        "name": "SYNAPSE_WORKSPACE_NAME",
-                        "value": "[parameters('synapseWorkspaceName')]"
-                    },
-                    {
-                        "name": "SERVICE_PRINCIPAL_NAME",
-                        "value": "[parameters('servicePrincipalName')]"
-                    },
-                    {
-                        "name": "TENANT_ID",
-                        "value": "[parameters('tenantId')]"
-                    },
-                    {
-                        "name": "CLIENT_ID",
-                        "value": "[parameters('clientId')]"
-                    },
-                    {
-                        "name": "CLIENT_SECRET",
-                        "value": "[parameters('clientSecret')]"
-                    },
-                    {
-                        "name": "STORAGE_ACCOUNT_NAME",
-                        "value": "[parameters('storageAccountName')]"
-                    }
-                ]
+                    ]
+                }
             }
         }
     ]
