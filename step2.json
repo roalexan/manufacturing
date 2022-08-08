@@ -1,0 +1,56 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "prefix": {
+            "type": "String",
+            "metadata": {
+                "description": "Short string prepended to some resource names to make them unique."
+            }
+        },
+        "location": {
+            "defaultValue": "northeurope",
+            "type": "String",
+            "metadata": {
+                "description": "Specifies the location of the deployment."
+            }
+        }
+    },
+    "variables": {
+        "resourceGroupName": "[concat(parameters('prefix'), '-mc4m-rg')]",
+        "identity": "MC4M_IDENTITY",
+        "storageAccountName": "[concat(parameters('prefix'), 'mc4mst')]",
+        "roleAssignmentVersion": "2020-04-01-preview",
+        "storageRoleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+        "storageRoleAssignDeployment": "[guid(variables('storageRoleDefinitionId'), variables('resourceGroupName'))]"
+    },
+    "resources": [
+        {
+            "metadata": {
+                "comments": "Grant the Storage Blob Data Contributor role to the user-assigned managed identity on the storage account."
+            },
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "[variables('roleAssignmentVersion')]",
+            "name": "[variables('storageRoleAssignDeployment')]",
+            "scope": "[concat('Microsoft.Storage/storageAccounts', '/', variables('storageAccountName'))]",
+            "properties": {
+                "roleDefinitionId": "[variables('storageRoleDefinitionId')]",
+                "principalId": "[reference(resourceId(subscription().subscriptionId, variables('resourceGroupName'), 'Microsoft.ManagedIdentity/userAssignedIdentities', variables('identity')), '2018-11-30').principalId]"
+            }
+        }
+    ],
+    "outputs": {
+        "prefix": {
+            "type": "string",
+            "value": "[parameters('prefix')]"
+        },
+        "location": {
+            "type": "string",
+            "value": "[parameters('location')]"
+        },
+        "resourceGroupName": {
+            "type": "string",
+            "value": "[variables('resourceGroupName')]"
+        }
+    }
+}
