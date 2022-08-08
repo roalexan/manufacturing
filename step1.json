@@ -216,26 +216,26 @@
         "resourceGroupName": {
             "type": "string",
             "value": "[variables('resourceGroupName')]"
+        },
+        "sqlAdministratorLogin": {
+            "type": "string",
+            "value": "[variables('sqlAdministratorLogin')]"
+        },
+        "sqlAdministratorLoginPassword": {
+            "type": "SecureString",
+            "value": "[variables('sqlAdministratorLoginPassword')]"
+        },
+        "storageAccountName": {
+            "type": "string",
+            "value": "[variables('storageAccountName')]"
+        },
+        "synapseWorkspaceName": {
+            "type": "string",
+            "value": "[variables('synapseWorkspaceName')]"
+        },
+        "sparkPoolName": {
+            "type": "string",
+            "value": "[variables('sparkPoolName')]"
         }
-        //"sqlAdministratorLogin": {
-        //    "type": "string",
-        //    "value": "[variables('sqlAdministratorLogin')]"
-        //},
-        //"sqlAdministratorLoginPassword": {
-        //    "type": "SecureString",
-        //    "value": "[variables('sqlAdministratorLoginPassword')]"
-        //},
-        //"storageAccountName": {
-        //    "type": "string",
-        //    "value": "[variables('storageAccountName')]"
-        //},
-        //"synapseWorkspaceName": {
-        //    "type": "string",
-        //    "value": "[variables('synapseWorkspaceName')]"
-        //},
-        //"sparkPoolName": {
-        //    "type": "string",
-        //    "value": "[variables('sparkPoolName')]"
-        //}
     }
 }

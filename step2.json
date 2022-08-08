@@ -1,6 +1,6 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
+    "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+    "contentVersion": "1.0.0.1",
     "parameters": {
         "prefix": {
             "type": "String",
@@ -19,6 +19,8 @@
     "variables": {
         "resourceGroupName": "[concat(parameters('prefix'), '-mc4m-rg')]",
         "identity": "MC4M_IDENTITY",
+        "identityResourceId": "[resourceId(subscription().subscriptionId, variables('resourceGroupName'), 'Microsoft.ManagedIdentity/userAssignedIdentities', variables('identity'))]",
+        "synapseWorkspaceName": "[concat(parameters('prefix'), '-synw')]",
         "storageAccountName": "[concat(parameters('prefix'), 'mc4mst')]",
         "roleAssignmentVersion": "2020-04-01-preview",
         "storageRoleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
@@ -26,16 +28,72 @@
     },
     "resources": [
         {
-            "metadata": {
-                "comments": "Grant the Storage Blob Data Contributor role to the user-assigned managed identity on the storage account."
-            },
-            "type": "Microsoft.Authorization/roleAssignments",
-            "apiVersion": "[variables('roleAssignmentVersion')]",
-            "name": "[variables('storageRoleAssignDeployment')]",
-            "scope": "[concat('Microsoft.Storage/storageAccounts', '/', variables('storageAccountName'))]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-10-01",
+            "name": "objectDeployment",
+            "resourceGroup": "[variables('resourceGroupName')]",
             "properties": {
-                "roleDefinitionId": "[variables('storageRoleDefinitionId')]",
-                "principalId": "[reference(resourceId(subscription().subscriptionId, variables('resourceGroupName'), 'Microsoft.ManagedIdentity/userAssignedIdentities', variables('identity')), '2018-11-30').principalId]"
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "metadata": {
+                                "comments": "Grant the Storage Blob Data Contributor role to the user-assigned managed identity on the storage account."
+                            },
+                            "type": "Microsoft.Authorization/roleAssignments",
+                            "apiVersion": "[variables('roleAssignmentVersion')]",
+                            "name": "[variables('storageRoleAssignDeployment')]",
+                            "scope": "[concat('Microsoft.Storage/storageAccounts', '/', variables('storageAccountName'))]",
+                            "properties": {
+                                "roleDefinitionId": "[variables('storageRoleDefinitionId')]",
+                                "principalId": "[reference(resourceId(subscription().subscriptionId, variables('resourceGroupName'), 'Microsoft.ManagedIdentity/userAssignedIdentities', variables('identity')), '2018-11-30').principalId]"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Resources/deploymentScripts",
+                            "apiVersion": "2020-10-01",
+                            "name": "CreateDataPipelines",
+                            "location": "[parameters('location')]",
+                            "kind": "AzureCLI",
+                            "identity": {
+                                "type": "userAssigned",
+                                "userAssignedIdentities": {
+                                    "[variables('identityResourceId')]": {}
+                                }
+                            },
+                            "properties": {
+                                "scriptContent": "
+                                    echo SUBSCRIPTION_ID: ${SUBSCRIPTION_ID};
+                                    echo RESOURCE_GROUP_NAME: ${RESOURCE_GROUP_NAME};
+                                    echo SYNAPSE_WORKSPACE_NAME: ${SYNAPSE_WORKSPACE_NAME};
+                                    az account show;
+                                    az account set -s ${SUBSCRIPTION_ID};
+                                    az configure --defaults group=${RESOURCE_GROUP_NAME};
+                                    az synapse role assignment list --workspace-name ${SYNAPSE_WORKSPACE_NAME}",
+                                "azCliVersion": "2.37.0",
+                                "retentionInterval": "P1D",
+                                "environmentVariables": [
+                                    {
+                                        "name": "SUBSCRIPTION_ID",
+                                        "value": "[subscription().subscriptionId]"
+                                    },
+                                    {
+                                        "name": "RESOURCE_GROUP_NAME",
+                                        "value": "[variables('resourceGroupName')]"
+                                    },
+                                    {
+                                        "name": "SYNAPSE_WORKSPACE_NAME",
+                                        "value": "[variables('synapseWorkspaceName')]"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
             }
         }
     ],
