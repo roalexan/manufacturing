@@ -66,14 +66,7 @@
                                 }
                             },
                             "properties": {
-                                "scriptContent": "
-                                    echo SUBSCRIPTION_ID: ${SUBSCRIPTION_ID};
-                                    echo RESOURCE_GROUP_NAME: ${RESOURCE_GROUP_NAME};
-                                    echo SYNAPSE_WORKSPACE_NAME: ${SYNAPSE_WORKSPACE_NAME};
-                                    az account show;
-                                    az account set -s ${SUBSCRIPTION_ID};
-                                    az configure --defaults group=${RESOURCE_GROUP_NAME};
-                                    az synapse role assignment list --workspace-name ${SYNAPSE_WORKSPACE_NAME}",
+                                "scriptContent": "echo SUBSCRIPTION_ID: ${SUBSCRIPTION_ID};echo RESOURCE_GROUP_NAME: ${RESOURCE_GROUP_NAME};echo SYNAPSE_WORKSPACE_NAME: ${SYNAPSE_WORKSPACE_NAME};az account show;az account set -s ${SUBSCRIPTION_ID};az configure --defaults group=${RESOURCE_GROUP_NAME};az synapse role assignment list --workspace-name ${SYNAPSE_WORKSPACE_NAME}",
                                 "azCliVersion": "2.37.0",
                                 "retentionInterval": "P1D",
                                 "environmentVariables": [
